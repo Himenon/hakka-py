@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
-"""Console script for toss."""
+"""Console script for hakka."""
 
 import click
 
 
 @click.command()
 def main(args=None):
-    """Console script for toss."""
+    """Console script for hakka."""
     click.echo("Replace this message by putting your code into "
-               "toss.cli.main")
+               "hakka.cli.main")
     click.echo("See click documentation at http://click.pocoo.org/")
     return 0
 

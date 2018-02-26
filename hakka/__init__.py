@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Top-level package for toss."""
+"""Top-level package for hakka."""
 
 __author__ = """Kosei Himeno"""
 __email__ = 'k.himeno314@gmail.com'

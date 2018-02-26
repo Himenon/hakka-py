@@ -1,21 +1,21 @@
 ====
-toss
+hakka
 ====
 
 
-.. image:: https://img.shields.io/pypi/v/toss.svg
-        :target: https://pypi.python.org/pypi/toss
+.. image:: https://img.shields.io/pypi/v/hakka.svg
+        :target: https://pypi.python.org/pypi/hakka
 
-.. image:: https://img.shields.io/travis/himenon/toss.svg
-        :target: https://travis-ci.org/himenon/toss
+.. image:: https://img.shields.io/travis/himenon/hakka.svg
+        :target: https://travis-ci.org/himenon/hakka
 
-.. image:: https://readthedocs.org/projects/toss/badge/?version=latest
-        :target: https://toss.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/hakka/badge/?version=latest
+        :target: https://hakka.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 
-.. image:: https://pyup.io/repos/github/himenon/toss/shield.svg
-     :target: https://pyup.io/repos/github/himenon/toss/
+.. image:: https://pyup.io/repos/github/himenon/hakka/shield.svg
+     :target: https://pyup.io/repos/github/himenon/hakka/
      :alt: Updates
 
 
@@ -24,7 +24,7 @@ Small Task Queue
 
 
 * Free software: MIT license
-* Documentation: https://toss.readthedocs.io.
+* Documentation: https://hakka.readthedocs.io.
 
 
 Usage
@@ -34,9 +34,9 @@ Usage
 
 .. code-block:: python
 
-    from toss import Toss
+    from hakka import Hakka
 
-    app = Toss()
+    app = Hakka()
 
     @app.watch('hello:msg', redis_dtype='list', redis_vtype='json')
     def hello_msg(name=None, msg=None, **kwargs):

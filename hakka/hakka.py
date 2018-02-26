@@ -33,7 +33,7 @@ def cast_redis_value(val, _vtype):
     return _cast(val)
 
 
-class Toss(object):
+class Hakka(object):
     _config = {}
     _keys = []
     _running = False
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     logger.setLevel(DEBUG)
     logger.addHandler(handler)
 
-    app = Toss()
+    app = Hakka()
 
 
     @app.watch('hello:msg', redis_dtype='list', redis_vtype='json')

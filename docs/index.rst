@@ -1,4 +1,4 @@
-Welcome to toss's documentation!
+Welcome to hakka's documentation!
 ======================================
 
 .. toctree::

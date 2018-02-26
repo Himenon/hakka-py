@@ -1,4 +1,4 @@
-"""Tests for `toss` package."""
+"""Tests for `hakka` package."""
 
 import pytest
 
@@ -8,8 +8,8 @@ import sys
 
 sys.path.append('/src')
 
-from toss import toss
-from toss import cli
+from hakka import hakka
+from hakka import cli
 
 
 @pytest.fixture
@@ -33,14 +33,14 @@ def test_command_line_interface():
     runner = CliRunner()
     result = runner.invoke(cli.main)
     assert result.exit_code == 0
-    assert 'toss.cli.main' in result.output
+    assert 'hakka.cli.main' in result.output
     help_result = runner.invoke(cli.main, ['--help'])
     assert help_result.exit_code == 0
     assert '--help  Show this message and exit.' in help_result.output
 
 
 def test_same_callback():
-    app = toss.Toss()
+    app = hakka.Hakka()
 
     _test_key = 'test:func'
 

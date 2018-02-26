@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use toss in a project::
+To use hakka in a project::
 
-    import toss
+    import hakka

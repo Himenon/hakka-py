@@ -25,5 +25,5 @@ deploy:
     secure: PLEASE_REPLACE_ME
   on:
     tags: true
-    repo: himenon/toss
+    repo: himenon/hakka
     python: 3.6
