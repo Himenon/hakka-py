@@ -8,6 +8,8 @@ services:
       - ./:/src
     working_dir: /src
     command: "ptw"
+    env_file:
+      - .pypienv
     environment:
       REDIS_HOST: 'redis'
       REDIS_PORT: 6379
