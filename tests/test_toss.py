@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """Tests for `toss` package."""
 
 import pytest
@@ -30,6 +27,7 @@ def test_content(response):
     # from bs4 import BeautifulSoup
     # assert 'GitHub' in BeautifulSoup(response.content).title.string
 
+
 def test_command_line_interface():
     """Test the CLI."""
     runner = CliRunner()
@@ -41,5 +39,16 @@ def test_command_line_interface():
     assert '--help  Show this message and exit.' in help_result.output
 
 
-def test_redis_connected():
-    assert True == toss.redis_connect_check()
+def test_same_callback():
+    app = toss.Toss()
+
+    _test_key = 'test:func'
+
+    @app.watch(_test_key)
+    def test_func():
+        pass
+
+    params = app._config.get(_test_key)
+    callback = params.get('callback')
+
+    assert test_func == callback

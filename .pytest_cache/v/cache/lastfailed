@@ -1,0 +1,3 @@
+{
+  "tests/test_toss.py::test_redis_connected": true
+}

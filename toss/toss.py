@@ -1,71 +1,127 @@
 from os import environ as env
-from .conn import get_redis
-from .queue import Queue
+import redis
+import json
+from logging import StreamHandler, getLogger
+from time import sleep
 
+logger = getLogger(__name__)
+handler = StreamHandler()
+
+__author__ = 'Kosei.Himeno'
 
 # 別スレッドで、状態を返す
 
+redis_vtypes = {
+    'str': str,
+    'int': int,
+    'float': float,
+    'bool': bool,
+    'json': json.loads,
+}
+
+
+def cast_redis_value(val, _vtype):
+    """
+
+    :param val:
+    :param _vtype:
+    :return:
+    :rtype: str or int or float or bool or dict
+    """
+    # FIXME: jsonでparseできない場合に落ちる
+    _cast = redis_vtypes.get(_vtype)
+    return _cast(val)
+
+
 class Toss(object):
-    _callback = {}
-    __keys = []
-    _data_stores = {}
+    _config = {}
+    _keys = []
     _running = False
+    _beat = 0.01
 
     def __init__(self):
-        self.observer = None
-        self.queue = None
-        self.server = None
+        self.conn = None
+        self.debug = False
 
-    @property
-    def subscribed(self):
-        return True
+    def listen(self, host=None, port=None, db=None, debug=False):
+        self.debug = debug
+        self.conn = redis.Redis(host=host, port=port, db=db)
+        self.watch_task_queue()
 
-    def listen(self, host=None, port=None, db=None):
-        self.server = get_redis(host=host, port=port, db=db)
-        self.queue = Queue(self.server)
-        self._run_pubspub()
+    def watch(self, key=None, redis_dtype='LIST', redis_vtype='str'):
+        def _watch(callback):
+            self._config.update({
+                key: {
+                    'callback': callback,
+                    'redis:dtype': redis_dtype,
+                    'redis:vtype': redis_vtype,
+                }
+            })
+            self._keys.append(key)
+            return callback
 
-    def _run_pubspub(self):
-        self._running = True
-        pubsub = self.server.pubsub()
-        pubsub.subscribe(['channel'])
-        recv_msg = True
-        for item in pubsub.listen():
-            print(item)
-            if not recv_msg:
-                break
-            if item['data'] == b'__EOM__':
-                pubsub.unsubscribe()
-                recv_msg = False
-        self.close()
-        self._running = False
+        return _watch
 
-    def _connect(self):
-        pass
+    def _run_task(self):
+        for key in self._keys:
+            params = self._config.get(key)
+            data = None
+            redis_dtype = params.get('redis:dtype')
 
-    def register(self, kind, name, **kwargs):
-        if kind == 'store':
-            self._register_store(name, **kwargs)
+            pipe = self.conn.pipeline()
+            pipe.watch(key)
 
-    def _register_store(self, name, **kwargs):
-        _type = kwargs.pop('type')
-        self._data_stores.update({
-            name: get_redis(**kwargs)
-        })
+            if redis_dtype == 'list':
+                data = pipe.lpop(key)
+                # TODO lpoprpushして、エラー時の対応をする
 
-    def pump(self, key, func):
-        pass
+            if redis_dtype == 'str':
+                data = pipe.get(key)
+                # TODO エラー時の対応
+                self.conn.delete(key)
 
-    def stock(self, store_name, data=None):
-        pass
+            # Break: TODO: timeout
+            if data is None:
+                continue
 
-    def send(self):
-        pass
+            # Cast:
+            redis_vtype = params.get('redis:vtype')
+            callback = params.get('callback')
 
-    def close(self):
-        pass
+            callback_args = cast_redis_value(data, redis_vtype)
+            if redis_vtype == 'json':
+                callback(**callback_args)
+            else:
+                callback(callback_args)
+
+    def watch_task_queue(self):
+        logger.debug("watch keys: {}".format(self._keys))
+        while True:
+            self._run_task()
+            sleep(self._beat)
 
 
 if __name__ == '__main__':
+    from logging import DEBUG
+
+    handler.setLevel(DEBUG)
+    logger.setLevel(DEBUG)
+    logger.addHandler(handler)
+
     app = Toss()
-    app.listen(host=env.get('REDIS_HOST'), port=env.get('REDIS_PORT'), db=env.get('REDIS_DB'))
+
+
+    @app.watch('hello:msg', redis_dtype='list', redis_vtype='json')
+    def hello_msg(name=None, msg=None, **kwargs):
+        print("Hello {name}!, {msg}".format(name=name, msg=msg))
+
+
+    @app.watch('test:good', redis_dtype='list', redis_vtype='json')
+    def hello(name=None, good=None, **kwargs):
+        logger.debug("=" * 30)
+        logger.debug(name)
+        logger.debug(good)
+        logger.debug(kwargs)
+
+
+    app.listen(host=env.get('REDIS_HOST'), port=env.get('REDIS_PORT'), db=env.get('REDIS_DB'), debug=True)

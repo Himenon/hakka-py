@@ -27,10 +27,38 @@ Small Task Queue
 * Documentation: https://toss.readthedocs.io.
 
 
+Usage
+-----
+
+*Receiver*
+
+.. code-block:: python
+
+    from toss import Toss
+
+    app = Toss()
+
+    @app.watch('hello:msg', redis_dtype='list', redis_vtype='json')
+    def hello_msg(name=None, msg=None, **kwargs):
+        print("Hello {name}!, {msg}".format(name=name, msg=msg))
+
+    app.listen('localhost', 6379, 0, debug=True)
+
+
+*Sender*
+
+.. code-block:: shell
+
+    redis-cli lpush hello:msg '{"name": "yourname", "msg": "Congratulation!"}'
+
+
 Features
 --------
 
 * TODO
+
+- Cluster
+
 
 Credits
 -------
