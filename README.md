@@ -3,7 +3,7 @@
 [![PyPi Status](https://img.shields.io/pypi/v/hakka.svg)](https://pypi.org/project/hakka/)
 [![Travis CI Status](https://img.shields.io/travis/himenon/hakka.svg)](https://travis-ci.org/himenon/hakka)
 [![Documentation Status](https://readthedocs.org/projects/hakka/badge/?version=latest)](https://hakka.readthedocs.io/en/latest/?badge=latest)
-[![Updates](https://pyup.io/repos/github/himenon/hakka/shield.svg)](https://pyup.io/repos/github/himenon/hakka/)
+[![Updates](https://pyup.io/repos/github/himenon/hakka/shield.svg)](https://pyup.io/repos/github/himenon/hakka-py/)
 
 Small Task Queue
 

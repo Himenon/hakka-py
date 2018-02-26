@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/himenon/hakka
+    $ git clone git://github.com/himenon/hakka-py
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://github.com/himenon/hakka/tarball/master
+    $ curl  -OL https://github.com/himenon/hakka-py/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/himenon/hakka
-.. _tarball: https://github.com/himenon/hakka/tarball/master
+.. _Github repo: https://github.com/himenon/hakka-py
+.. _tarball: https://github.com/himenon/hakka-py/tarball/master
