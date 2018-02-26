@@ -52,13 +52,24 @@ Usage
     redis-cli lpush hello:msg '{"name": "yourname", "msg": "Congratulation!"}'
 
 
+How to Develop
+--------------
+
+Using: Docker, docker-compose
+
+.. code-block:: shell
+
+    docker-compose up
+    # start pytest-watch
+
+
 Features
 --------
 
 * TODO
-
-- Cluster
-
+    - クラスター対応
+    - エラー対応
+    - CIの追加
 
 Credits
 -------
