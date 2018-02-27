@@ -7,7 +7,6 @@ from time import sleep
 logger = getLogger(__name__)
 handler = StreamHandler()
 
-__author__ = 'Kosei.Himeno'
 
 # 別スレッドで、状態を返す
 
