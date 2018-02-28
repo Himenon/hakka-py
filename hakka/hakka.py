@@ -2,7 +2,7 @@ from os import environ as env
 import redis
 import json
 from logging import StreamHandler, getLogger
-from time import sleep
+import asyncio
 
 logger = getLogger(__name__)
 handler = StreamHandler()
@@ -37,15 +37,18 @@ class Hakka(object):
     _keys = []
     _running = False
     _beat = 0.01
+    _loop = None
 
     def __init__(self):
         self.conn = None
         self.debug = False
 
     def listen(self, host=None, port=None, db=None, debug=False):
+        self._loop = asyncio.get_event_loop()
         self.debug = debug
         self.conn = redis.Redis(host=host, port=port, db=db)
         self.watch_task_queue()
+        self._loop.run_forever()
 
     def watch(self, key=None, redis_dtype='LIST', redis_vtype='str'):
         def _watch(callback):
@@ -92,12 +95,11 @@ class Hakka(object):
                 callback(**callback_args)
             else:
                 callback(callback_args)
+        self._loop.call_later(self._beat, self._run_task)
 
     def watch_task_queue(self):
         logger.debug("watch keys: {}".format(self._keys))
-        while True:
-            self._run_task()
-            sleep(self._beat)
+        self._loop.call_soon(self._run_task)
 
 
 if __name__ == '__main__':
