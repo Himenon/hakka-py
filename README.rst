@@ -12,7 +12,7 @@ hakka-py
         :target: https://hakka-py.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://pyup.io/repos/github/Himenon/hakka-py/shield.svg
+.. image:: https:/  /pyup.io/repos/github/Himenon/hakka-py/shield.svg
      :target: https://pyup.io/repos/github/Himenon/hakka-py/
      :alt: Updates
 
