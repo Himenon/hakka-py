@@ -1,15 +1,14 @@
 from os import environ as env
 import asyncio
-from hakka import logger
 from .broker import make_broker
 from .exceptions import (
     HakkaConnectionError,
     HakkaTimeoutError,
 )
+from .logging import create_logger
 
 
 # 別スレッドで、状態を返す
-
 class Hakka(object):
     _config = {}
     _loop = None
@@ -32,6 +31,9 @@ class Hakka(object):
         self._loop.run_forever()
 
     def watch(self, key=None, *args, **kwargs):
+        if key is None:
+            raise ValueError("'key' argument should be other than None.")
+
         def _watch(callback):
             self._config.update({
                 key: {
@@ -54,6 +56,11 @@ class Hakka(object):
             arguments = self.conn.get_value(key)
             callback(**arguments)
 
+    # TODO cached_property
+    @property
+    def logger(self):
+        return create_logger(self)
+
     def watch_tasks(self):
         try:
             self.run_task()  # タスクの実行
@@ -61,29 +68,29 @@ class Hakka(object):
         except HakkaConnectionError:
             # 再実行
             self._retry_counter += 1
-            logger.error("Retry Redis connection .... {}".format(self._retry_counter))
+            self.logger.error("Retry Redis connection .... {}".format(self._retry_counter))
             self._loop.call_later(self.retry_connection_interval, self.watch_tasks)
         except HakkaTimeoutError:
-            logger.error("Timeout Error")
+            self.logger.error("Timeout Error")
             pass
         self._retry_counter = 0
 
 
-if __name__ == '__main__':
-    app = Hakka()
-
-
-    @app.watch('hello:msg')
-    def hello_msg(name=None, msg=None, **kwargs):
-        print("Hello {name}!, {msg}".format(name=name, msg=msg))
-
-
-    @app.watch('test:good')
-    def hello(name=None, good=None, **kwargs):
-        logger.debug("=" * 30)
-        logger.debug(name)
-        logger.debug(good)
-        logger.debug(kwargs)
-
-
-    app.listen(host=env.get('REDIS_HOST'), port=env.get('REDIS_PORT'), db=env.get('REDIS_DB'), debug=True)
+# if __name__ == '__main__':
+#     app = Hakka()
+#
+#
+#     @app.watch('hello:msg')
+#     def hello_msg(name=None, msg=None, **kwargs):
+#         print("Hello {name}!, {msg}".format(name=name, msg=msg))
+#
+#
+#     @app.watch('test:good')
+#     def hello(name=None, good=None, **kwargs):
+#         logger.debug("=" * 30)
+#         logger.debug(name)
+#         logger.debug(good)
+#         logger.debug(kwargs)
+#
+#
+#     app.listen(host=env.get('REDIS_HOST'), port=env.get('REDIS_PORT'), db=env.get('REDIS_DB'), debug=True)

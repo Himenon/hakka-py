@@ -1,53 +1,28 @@
-"""Tests for `hakka` package."""
-
-import pytest
-
-from click.testing import CliRunner
-
-import sys
-from mock import Mock
-
-sys.path.append('/src')
-
-from hakka import hakka
-from hakka import cli
+from hakka import Hakka
+from unittest import TestCase
+from mock import MagicMock
 
 
-@pytest.fixture
-def response():
-    """Sample pytest fixture.
-
-    See more at: http://doc.pytest.org/en/latest/fixture.html
-    """
-    # import requests
-    # return requests.get('https://github.com/audreyr/cookiecutter-pypackage')
-
-def test_hakka_watch():
-    h = hakka.Hakka()
-    mymethod = Mock()
-    mymethod.return_value = 'watch-test'
-
-def test_command_line_interface():
-    """Test the CLI."""
-    runner = CliRunner()
-    result = runner.invoke(cli.main)
-    assert result.exit_code == 0
-    assert 'hakka.cli.main' in result.output
-    help_result = runner.invoke(cli.main, ['--help'])
-    assert help_result.exit_code == 0
-    assert '--help  Show this message and exit.' in help_result.output
+def test_initial_params(app):
+    assert app.conn is None
+    assert app.debug is False
+    assert app.max_retry_count == 60
+    assert app.retry_connection_interval == 5
+    assert app.beat_interval == 0.01
+    assert app.timeout == 30
+    assert app.watch_keys == []
 
 
-def test_same_callback():
-    app = hakka.Hakka()
+def test_watch(app):
+    # mock_func = MagicMock()
+    # mock_func.__name__ = 'mock_func'
+    @app.watch("hello")
+    def my_func():
+        return "HELLO"
 
-    _test_key = 'test:func'
+    print(my_func)
+    assert my_func() == "HELLO"
 
-    @app.watch(_test_key)
-    def test_func():
-        pass
 
-    params = app._config.get(_test_key)
-    callback = params.get('callback')
-
-    assert test_func == callback
+def tearDown(self):
+    pass

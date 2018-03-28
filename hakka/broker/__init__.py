@@ -7,9 +7,6 @@ class BaseBroker:
     def ping(self):
         pass
 
-    def liveness_probe(self):
-        pass
-
 
 from .redis import RedisBroker
 
