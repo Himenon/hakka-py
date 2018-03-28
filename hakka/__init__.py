@@ -1,9 +1,21 @@
-# -*- coding: utf-8 -*-
+from logging import StreamHandler, getLogger as _getLogger
+from logging import DEBUG, INFO, WARN, CRITICAL, WARNING, ERROR
+from os import environ
 
-"""Top-level package for hakka."""
+_LOG_LEVELS = {
+    "DEBUG": DEBUG,
+    "INFO": INFO,
+    "WARN": WARN,
+    "CRITICAL": CRITICAL,
+    "WARNING": WARNING,
+    "ERROR": ERROR
+}
 
-__author__ = """Kosei Himeno"""
-__email__ = 'k.himeno314@gmail.com'
-__version__ = '0.1.0'
+LOG_LEVEL = _LOG_LEVELS.get(environ.get('LOG_LEVEL'), INFO)
 
-from .hakka import Hakka
+logger = _getLogger(__name__)
+handler = StreamHandler()
+
+handler.setLevel(LOG_LEVEL)
+logger.setLevel(LOG_LEVEL)
+logger.addHandler(handler)
