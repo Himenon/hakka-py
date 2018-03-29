@@ -1,128 +1,89 @@
-from os import environ as env
-import redis
-import json
-from logging import StreamHandler, getLogger
 import asyncio
-
-logger = getLogger(__name__)
-handler = StreamHandler()
+# from .exceptions import (
+#     HakkaConnectionError,
+#     HakkaTimeoutError,
+# )
+from redis.exceptions import ConnectionError as HakkaConnectionError
+from redis.exceptions import TimeoutError as HakkaTimeoutError
+from .logging import create_logger
+from .helpers import locked_cached_property
 
 
 # 別スレッドで、状態を返す
-
-redis_vtypes = {
-    'str': str,
-    'int': int,
-    'float': float,
-    'bool': bool,
-    'json': json.loads,
-}
-
-
-def cast_redis_value(val, _vtype):
-    """
-
-    :param val:
-    :param _vtype:
-    :return:
-    :rtype: str or int or float or bool or dict
-    """
-    # FIXME: jsonでparseできない場合に落ちる
-    _cast = redis_vtypes.get(_vtype)
-    return _cast(val)
-
-
 class Hakka(object):
     _config = {}
-    _keys = []
-    _running = False
-    _beat = 0.01
     _loop = None
+    _retry_counter = 0
+    testing = False
+    connected = False
 
-    def __init__(self):
-        self.conn = None
-        self.debug = False
-
-    def listen(self, host=None, port=None, db=None, debug=False):
-        self._loop = asyncio.get_event_loop()
+    def __init__(self, client, debug=False):
         self.debug = debug
-        self.conn = redis.Redis(host=host, port=port, db=db)
-        self.watch_task_queue()
-        self._loop.run_forever()
+        self.client = client
+        self.client.logger = self.logger
+        self.max_retry_count = 60
+        self.retry_connection_interval = 5
+        self.beat_interval = 0.01
+        self.timeout = 30
+        self._watch_keys = []
 
-    def watch(self, key=None, redis_dtype='LIST', redis_vtype='str'):
+    def listen(self):
+        self.logger.info("/* ---- Welcome to Hakka Application --- */")
+        self._loop = asyncio.get_event_loop()
+        self.watch_tasks()
+        self._loop.run_forever()
+        self._loop.close()
+
+    @property
+    def watch_keys(self):
+        if len(self._watch_keys) > 0:
+            return self._watch_keys
+        self._watch_keys = [k for k in self._config]
+        return self.watch_keys
+
+    def watch(self, key=None, *args, **kwargs):
+        if key is None:
+            raise ValueError("'key' argument should be other than None.")
+
         def _watch(callback):
             self._config.update({
                 key: {
                     'callback': callback,
-                    'redis:dtype': redis_dtype,
-                    'redis:vtype': redis_vtype,
                 }
             })
-            self._keys.append(key)
             return callback
 
         return _watch
 
-    def _run_task(self):
-        for key in self._keys:
-            params = self._config.get(key)
-            data = None
-            redis_dtype = params.get('redis:dtype')
+    def get_func(self, key):
+        return self._config.get(key).get('callback')
 
-            pipe = self.conn.pipeline()
-            pipe.watch(key)
-
-            if redis_dtype == 'list':
-                data = pipe.lpop(key)
-                # TODO lpoprpushして、エラー時の対応をする
-
-            if redis_dtype == 'str':
-                data = pipe.get(key)
-                # TODO エラー時の対応
-                self.conn.delete(key)
-
-            # Break: TODO: timeout
-            if data is None:
+    def run_task(self):
+        for key in self.watch_keys:
+            if not self.client.llen(key) > 0:
                 continue
+            callback = self.get_func(key)
+            arguments = self.client.get_value(key)
+            callback(**arguments)
 
-            # Cast:
-            redis_vtype = params.get('redis:vtype')
-            callback = params.get('callback')
+    @locked_cached_property
+    def logger(self):
+        return create_logger(self)
 
-            callback_args = cast_redis_value(data, redis_vtype)
-            if redis_vtype == 'json':
-                callback(**callback_args)
+    def watch_tasks(self):
+        try:
+            self.client.check_connection()
+            self.run_task()  # タスクの実行
+            self._loop.call_later(self.beat_interval, self.watch_tasks)  # タスクの再実行
+            self._retry_counter = 0
+        except HakkaConnectionError:
+            # 再実行
+            self._retry_counter += 1
+            self.logger.error("Retry Redis connection {} times {}".format(self._retry_counter, "." * self._retry_counter))
+            if self.max_retry_count == self._retry_counter:
+                self._loop.stop()
+                self.logger.error("/* ---- Shutdown Hakka Application ---- */")
             else:
-                callback(callback_args)
-        self._loop.call_later(self._beat, self._run_task)
-
-    def watch_task_queue(self):
-        logger.debug("watch keys: {}".format(self._keys))
-        self._loop.call_soon(self._run_task)
-
-
-if __name__ == '__main__':
-    from logging import DEBUG
-
-    handler.setLevel(DEBUG)
-    logger.setLevel(DEBUG)
-    logger.addHandler(handler)
-
-    app = Hakka()
-
-
-    @app.watch('hello:msg', redis_dtype='list', redis_vtype='json')
-    def hello_msg(name=None, msg=None, **kwargs):
-        print("Hello {name}!, {msg}".format(name=name, msg=msg))
-
-
-    @app.watch('test:good', redis_dtype='list', redis_vtype='json')
-    def hello(name=None, good=None, **kwargs):
-        logger.debug("=" * 30)
-        logger.debug(name)
-        logger.debug(good)
-        logger.debug(kwargs)
-
-
-    app.listen(host=env.get('REDIS_HOST'), port=env.get('REDIS_PORT'), db=env.get('REDIS_DB'), debug=True)
+                self._loop.call_later(self.retry_connection_interval, self.watch_tasks)
+        except HakkaTimeoutError:
+            self.logger.error("Timeout Error")
