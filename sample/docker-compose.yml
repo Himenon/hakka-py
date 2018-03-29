@@ -1,0 +1,21 @@
+version: '2.1'
+
+services:
+  dev:
+    build:
+      context: .
+    volumes:
+      - ./:/src
+    working_dir: /src
+    command: "python3 app.py"
+    environment:
+      REDIS_HOST: 'redis'
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+
+  redis:
+    image: redis
+    expose:
+      - 6379
+    links:
+      - dev
