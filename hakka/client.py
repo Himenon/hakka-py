@@ -17,7 +17,7 @@ class HakkaRedisMixin(BaseHakkaClient):
         try:
             self.ping()
             if self._connected is False:
-                self.logger.info("==== Success Connected Redis Client! ")
+                self.logger.info("==== Success Connected Redis Client! ====")
             self._connected = True
         except ConnectionError:
             self._connected = False
