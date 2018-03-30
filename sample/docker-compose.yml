@@ -18,4 +18,4 @@ services:
     ports:
       - 6379:6379
     links:
-      - dev
+      - devss

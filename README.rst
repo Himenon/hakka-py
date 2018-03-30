@@ -72,7 +72,7 @@ How to Develop
 
 Using: Docker, docker-compose
 
-.. code-block::bash
+.. code-block:: bash
 
     $ docker-compose up
     # start pytest-watch
