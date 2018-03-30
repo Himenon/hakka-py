@@ -2,20 +2,20 @@ version: '2.1'
 
 services:
   dev:
-    build:
-      context: .
+    build: .
+    working_dir: /code
     volumes:
-      - ./:/src
-    working_dir: /src
-    command: "python3 app.py"
+      - ./:/code
     environment:
       REDIS_HOST: 'redis'
       REDIS_PORT: 6379
-      REDIS_DB: 0
+    command: python worker.py
 
   redis:
     image: redis
     expose:
       - 6379
+    ports:
+      - 6379:6379
     links:
       - dev

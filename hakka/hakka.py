@@ -32,7 +32,7 @@ class Hakka(object):
         self._loop = asyncio.get_event_loop()
         self.watch_tasks()
         self._loop.run_forever()
-        self._loop.close()
+        # self._loop.close()
 
     @property
     def watch_keys(self):
@@ -79,11 +79,14 @@ class Hakka(object):
         except HakkaConnectionError:
             # 再実行
             self._retry_counter += 1
-            self.logger.error("Retry Redis connection {} times {}".format(self._retry_counter, "." * self._retry_counter))
-            if self.max_retry_count == self._retry_counter:
-                self._loop.stop()
-                self.logger.error("/* ---- Shutdown Hakka Application ---- */")
-            else:
-                self._loop.call_later(self.retry_connection_interval, self.watch_tasks)
+            self.logger.error("Retry Redis connection {} times.".format(self._retry_counter))
+            # if self.max_retry_count == self._retry_counter:
+            # self._loop.stop()
+            # self.logger.error("/* ---- Shutdown Hakka Application ---- */")
+            # else:
+            self._loop.call_later(self.retry_connection_interval, self.watch_tasks)
         except HakkaTimeoutError:
             self.logger.error("Timeout Error")
+        except Exception as e:
+            self.logger.error("--- 予期せぬエラーが発生しました ---")
+            self.logger.error(e)
