@@ -25,20 +25,20 @@ Small Task Queue
 Usage
 =====
 
-.. code-block::bash
+.. code-block:: bash
 
     $ pip install hakka
 
 
-**Receiver**
+**Worker**
 
-.. code-block::python
+.. code-block:: python
 
     from hakka import Hakka
 
     app = Hakka()
 
-    @app.watch('hello:msg', redis_dtype='list', redis_vtype='json')
+    @app.watch('hello:msg')
     def hello_msg(name=None, msg=None, **kwargs):
         print("Hello {name}!, {msg}".format(name=name, msg=msg))
 
@@ -46,7 +46,24 @@ Usage
 
 **Sender**
 
-.. code-block::bash
+.. code-block:: python
+
+    from hakka import HakkaRedisClient
+
+    if __name__ == '__main__':
+        client = HakkaRedisClient()
+
+        message = {
+            "name": "hakka",
+            "reading": "books"
+        }
+        for i in range(10):
+            message.update({
+                "msg": "Hello World x {}!".format(i),
+            })
+            client.set_value('hello:msg', message)
+
+.. code-block:: bash
 
     $ redis-cli lpush hello:msg '{"name": "yourname", "msg": "Congratulation!"}'
 
@@ -55,7 +72,7 @@ How to Develop
 
 Using: Docker, docker-compose
 
-.. code-block::bash
+.. code-block:: bash
 
     $ docker-compose up
     # start pytest-watch
